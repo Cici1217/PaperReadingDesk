@@ -22,11 +22,11 @@
       <div class="hero-copy">
         <p class="card-label" data-home-i18n="heroLabel">PAPERREADINGDESK</p>
         <h1 data-home-i18n="heroTitle">本地论文翻译与阅读</h1>
-        <p data-home-i18n="heroLead">导入 PDF，使用你自己的本机 Codex 完成翻译、摘要、问答和论文笔记。</p>
+        <p data-home-i18n="heroLead">导入 PDF，使用你自己的本机 Codex 或 Claude Code 完成翻译、摘要、问答和论文笔记。</p>
         <div class="hero-actions"><a class="primary-button" href="./papers.html" data-home-i18n="enterLibrary">进入论文库</a><a class="secondary-button feature-showcase-entry" href="./features.html"><span data-home-i18n="featureShowcase">功能展示 · 必读</span><span aria-hidden="true">→</span></a></div>
         <button id="codexConfigButton" class="codex-config-button" type="button" aria-haspopup="dialog" aria-controls="codexConfigDialog">
           <span class="codex-terminal-mark" aria-hidden="true">&gt;_</span>
-          <span class="codex-config-copy"><small data-home-i18n="codexEyebrow">本机 AI 配置</small><strong data-home-i18n="codexOpen">配置本机 Codex</strong></span>
+          <span class="codex-config-copy"><small data-home-i18n="codexEyebrow">本机 AI 配置</small><strong data-home-i18n="codexOpen">配置 Codex / Claude Code</strong></span>
           <span id="codexHomeStatus" class="codex-home-status is-checking"><i aria-hidden="true"></i><span data-home-i18n="statusChecking">正在读取…</span></span>
           <span class="codex-config-arrow" aria-hidden="true">→</span>
         </button>
@@ -35,23 +35,30 @@
     </section>
   </main>
   <dialog id="codexConfigDialog" class="codex-config-dialog" aria-labelledby="codexConfigTitle">
-    <div class="codex-dialog-head"><div><p data-home-i18n="codexEyebrow">本机 AI 配置</p><h2 id="codexConfigTitle" data-home-i18n="dialogTitle">本机 Codex 配置</h2></div><button id="codexConfigClose" type="button" aria-label="关闭" data-home-i18n-aria-label="close">×</button></div>
+    <div class="codex-dialog-head"><div><p data-home-i18n="codexEyebrow">本机 AI 配置</p><h2 id="codexConfigTitle" data-home-i18n="dialogTitle">Codex / Claude Code 配置</h2></div><button id="codexConfigClose" type="button" aria-label="关闭" data-home-i18n-aria-label="close">×</button></div>
+    <div class="ai-provider-tabs" role="tablist" aria-label="AI provider">
+      <button id="providerCodex" type="button" role="tab" data-provider="codex" aria-selected="true">Codex</button>
+      <button id="providerClaude" type="button" role="tab" data-provider="claude" aria-selected="false">Claude Code</button>
+      <span><span data-home-i18n="activeProvider">当前使用</span>：<strong id="activeProviderName">Codex</strong></span>
+    </div>
     <section class="codex-status-panel" aria-live="polite">
       <div class="codex-status-heading"><span id="codexDialogIndicator" class="codex-dialog-indicator is-checking"><i aria-hidden="true"></i><strong id="codexDialogStatus" data-home-i18n="statusChecking">正在读取…</strong></span><button id="codexRefreshStatus" type="button" data-home-i18n="refresh">重新读取</button></div>
       <dl class="codex-status-grid">
         <div><dt data-home-i18n="authMethod">认证方式</dt><dd id="codexAuthMethod">—</dd></div><div><dt data-home-i18n="version">CLI 版本</dt><dd id="codexVersion">—</dd></div>
         <div><dt data-home-i18n="savedCommand">已保存命令</dt><dd><code id="codexSavedCommand">—</code></dd></div><div><dt data-home-i18n="model">模型</dt><dd><code id="codexModel">—</code></dd></div>
-        <div><dt data-home-i18n="reasoning">推理强度</dt><dd><code id="codexReasoning">—</code></dd></div><div><dt data-home-i18n="testReply">测试返回</dt><dd><code id="codexTestReply">—</code></dd></div>
+        <div id="reasoningStatusRow"><dt data-home-i18n="reasoning">推理强度</dt><dd><code id="codexReasoning">—</code></dd></div><div><dt data-home-i18n="testReply">测试返回</dt><dd><code id="codexTestReply">—</code></dd></div>
       </dl><p id="codexTestError" class="codex-test-error" hidden></p>
     </section>
     <form id="codexConfigForm" class="codex-config-form">
-      <div class="codex-command-intro"><h3 data-home-i18n="formTitle">配置自己的本机 Codex</h3><p data-home-i18n="formLead">先在终端安装 Codex 并登录，再保存并测试下面的配置。</p></div>
-      <details class="codex-query-guide" open><summary data-home-i18n="querySummary">新用户：这些值在哪里看？</summary><ol><li data-home-i18n="query1">执行 codex login status 确认登录。</li><li data-home-i18n="query2">执行 codex，输入 /model 查看模型和推理强度。</li><li data-home-i18n="query3">输入 /status 确认当前选择。</li></ol></details>
-      <label for="codexCommandInput" data-home-i18n="commandLabel">Codex 命令</label><input id="codexCommandInput" name="command" type="text" value="codex" autocomplete="off" required />
+      <div class="codex-command-intro"><h3 id="providerFormTitle">配置自己的本机 Codex</h3><p id="providerFormLead">先在终端安装并登录，再保存和测试配置。</p></div>
+      <details id="codexLoginGuide" class="codex-query-guide" open><summary data-home-i18n="querySummary">Codex 登录与查询</summary><ol><li data-home-i18n="query1">执行 codex login status 确认登录。</li><li data-home-i18n="query2">执行 codex，输入 /model 查看模型和推理强度。</li><li data-home-i18n="query3">输入 /status 确认当前选择。</li></ol></details>
+      <details id="claudeLoginGuide" class="codex-query-guide" open hidden><summary data-home-i18n="claudeGuideTitle">Claude Code 安装与登录</summary><pre>npm install -g @anthropic-ai/claude-code
+claude</pre><ol><li data-home-i18n="claudeQuery1">首次运行会打开浏览器，按提示登录 Claude 账号。</li><li data-home-i18n="claudeQuery2">如果未出现登录流程，请在 Claude Code 中输入 /login。</li><li data-home-i18n="claudeQuery3">输入 /status 确认账号和模型。浏览器未打开时按 c 复制登录链接。</li></ol><p data-home-i18n="claudeSecretNote">项目只保存命令、模型和测试状态，不保存账号、密码或令牌。</p></details>
+      <label for="codexCommandInput" id="commandLabel">Codex 命令</label><input id="codexCommandInput" name="command" type="text" value="codex" autocomplete="off" required />
       <label for="codexModelInput" data-home-i18n="model">模型</label><input id="codexModelInput" name="model" type="text" placeholder="先运行 /model 查询" data-home-i18n-placeholder="modelPlaceholder" autocomplete="off" required />
-      <label for="codexReasoningInput">Reasoning effort</label><input id="codexReasoningInput" name="reasoningEffort" type="text" list="codexReasoningSuggestions" placeholder="medium" autocomplete="off" required /><datalist id="codexReasoningSuggestions"><option value="minimal"></option><option value="low"></option><option value="medium"></option><option value="high"></option><option value="xhigh"></option></datalist>
-      <p data-home-i18n="configuredHint">保存后必须测试成功，论文翻译、摘要、问答和笔记功能才会启用。</p>
-      <div class="codex-config-actions"><button id="codexSaveCommand" type="submit" data-home-i18n="save">保存配置</button><button id="codexTestCommand" type="button" data-home-i18n="test">测试配置</button></div>
+      <div id="reasoningInputRow" class="ai-field-row"><label for="codexReasoningInput">Reasoning effort</label><input id="codexReasoningInput" name="reasoningEffort" type="text" list="codexReasoningSuggestions" placeholder="medium" autocomplete="off" required /><datalist id="codexReasoningSuggestions"><option value="minimal"></option><option value="low"></option><option value="medium"></option><option value="high"></option><option value="xhigh"></option></datalist></div>
+      <p data-home-i18n="configuredHint">保存并测试成功后，可将该 CLI 设为当前论文 AI 后端。</p>
+      <div class="codex-config-actions"><button id="codexSaveCommand" type="submit" data-home-i18n="save">保存配置</button><button id="codexTestCommand" type="button" data-home-i18n="test">测试配置</button><button id="useProviderCommand" type="button" data-home-i18n="useProvider">设为当前 AI</button></div>
     </form>
   </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>

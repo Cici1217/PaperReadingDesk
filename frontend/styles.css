@@ -121,6 +121,11 @@ main, footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
 .codex-dialog-head h2 { margin: 0; font-size: 31px; letter-spacing: -.045em; }
 .codex-dialog-head > button { display: grid; width: 34px; height: 34px; border: 0; border-radius: 50%; background: #eceae3; color: var(--muted); place-items: center; font-size: 22px; line-height: 1; }
 .codex-dialog-head > button:hover { background: var(--ink); color: white; }
+.ai-provider-tabs { display: flex; gap: 8px; align-items: center; margin-top: 20px; border-bottom: 1px solid var(--line); padding-bottom: 11px; }
+.ai-provider-tabs button { border: 1px solid #adb8ec; border-radius: 9px; background: white; padding: 8px 13px; color: var(--blue-dark); font-size: 10px; font-weight: 900; }
+.ai-provider-tabs button[aria-selected="true"] { border-color: var(--blue); background: var(--blue); color: white; }
+.ai-provider-tabs > span { margin-left: auto; color: var(--muted); font-size: 9px; }
+.ai-provider-tabs strong { color: var(--ink); }
 .codex-status-panel { margin-top: 22px; border: 1px solid #cfd5ee; border-radius: 16px; background: #f1f3ff; padding: 17px; }
 .codex-status-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
 .codex-dialog-indicator { color: var(--blue-dark); font-size: 11px; }
@@ -163,11 +168,15 @@ main, footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
 .codex-config-form > label { color: var(--ink); font-size: 9px; font-weight: 900; }
 .codex-config-form > input, .codex-config-form > select { width: 100%; border: 1px solid #adb8ec; border-radius: 11px; background: white; padding: 13px 14px; color: var(--ink); font: 700 13px/1.4 "SFMono-Regular", Consolas, monospace; outline: none; }
 .codex-config-form > input:focus, .codex-config-form > select:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(49,93,244,.1); }
+.ai-field-row { display: grid; gap: 8px; }
+.ai-field-row > label { color: var(--ink); font-size: 9px; font-weight: 900; }
+.ai-field-row > input { width: 100%; border: 1px solid #adb8ec; border-radius: 11px; background: white; padding: 13px 14px; color: var(--ink); font: 700 13px/1.4 "SFMono-Regular", Consolas, monospace; outline: none; }
 .codex-config-form > p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.6; }
 .codex-config-actions { display: flex; gap: 9px; margin-top: 10px; }
 .codex-config-actions button { border: 0; border-radius: 9px; padding: 10px 14px; font-size: 10px; font-weight: 900; }
 .codex-config-actions button:first-child { background: var(--ink); color: white; }
-.codex-config-actions button:last-child { background: var(--blue); color: white; }
+.codex-config-actions button:nth-child(2) { background: var(--blue); color: white; }
+.codex-config-actions button:nth-child(3) { border: 1px solid var(--blue); background: white; color: var(--blue); }
 .codex-config-actions button:hover { filter: brightness(1.08); }
 .codex-config-actions button:disabled { cursor: wait; opacity: .5; }
 

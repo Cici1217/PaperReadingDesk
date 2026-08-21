@@ -15,6 +15,7 @@ import shlex
 import shutil
 import sqlite3
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -54,6 +55,7 @@ SUMMARY_SCHEMA_PATH = RESOURCE_ROOT / "summary_schema.json"
 QA_SCHEMA_PATH = RESOURCE_ROOT / "qa_schema.json"
 NOTES_SCHEMA_PATH = RESOURCE_ROOT / "notes_schema.json"
 NOTES_GUIDE_PATH = RESOURCE_ROOT / "paper_notes_guide.md"
+CLAUDE_ADAPTER_PATH = ROOT / "backend" / "claude_codex_adapter.py"
 MATHJAX_ROOT = (ROOT / "node_modules" / "mathjax").resolve()
 MATHJAX_FONT_ROOT = (ROOT / "node_modules" / "@mathjax" / "mathjax-newcm-font").resolve()
 MAX_PDF_BYTES = 60 * 1024 * 1024
@@ -601,7 +603,7 @@ request_username: contextvars.ContextVar[str | None] = contextvars.ContextVar(
 )
 
 
-def resolve_codex_command(command_text: str) -> tuple[str, list[str]]:
+def resolve_cli_command(command_text: str, label: str) -> tuple[str, list[str]]:
     """Parse the saved runtime command without applying a command whitelist.
 
     Configuration is intentionally permissive: the real execution probe, not
@@ -612,18 +614,33 @@ def resolve_codex_command(command_text: str) -> tuple[str, list[str]]:
 
     command_text = str(command_text or "").strip()
     if not command_text:
-        raise ValueError("Codex 命令不能为空")
+        raise ValueError(f"{label} 命令不能为空")
     try:
         parts = shlex.split(command_text, posix=True)
     except ValueError as error:
         raise ValueError(f"命令无法解析：{error}") from error
     if not parts:
-        raise ValueError("Codex 命令不能为空")
+        raise ValueError(f"{label} 命令不能为空")
     executable = shutil.which(parts[0]) or parts[0]
     return command_text, [executable, *parts[1:]]
 
 
+def resolve_codex_command(command_text: str) -> tuple[str, list[str]]:
+    return resolve_cli_command(command_text, "Codex")
+
+
+def resolve_claude_command(command_text: str) -> tuple[str, list[str]]:
+    return resolve_cli_command(command_text, "Claude Code")
+
+
 def validate_codex_model(model: str) -> str:
+    model = str(model or "").strip()
+    if not model:
+        raise ValueError("模型不能为空")
+    return model
+
+
+def validate_claude_model(model: str) -> str:
     model = str(model or "").strip()
     if not model:
         raise ValueError("模型不能为空")
@@ -781,6 +798,167 @@ def codex_exec_command(*arguments: str) -> list[str]:
     ]
 
 
+def saved_claude_configuration() -> sqlite3.Row | None:
+    with connect_accounts_db() as db:
+        return db.execute("SELECT * FROM machine_claude_config WHERE id = 1").fetchone()
+
+
+def claude_configuration_status() -> dict[str, object]:
+    """Return the machine-wide, non-secret Claude Code configuration."""
+
+    row = saved_claude_configuration()
+    return {
+        "saved": bool(row),
+        "configured": bool(row and row["verified"]),
+        "command": row["command"] if row else "",
+        "model": row["model"] if row else "",
+        "version": row["version"] if row else "",
+        "authMethod": row["auth_method"] if row else "none",
+        "testReply": row["test_reply"] if row else "",
+        "error": row["error"] if row else "",
+        "testedAt": row["tested_at"] if row else None,
+        "updatedAt": row["updated_at"] if row else None,
+    }
+
+
+def save_claude_configuration(command_text: str, model: str) -> dict[str, object]:
+    """Save arbitrary Claude command/model text; the real probe validates it."""
+
+    command_text = str(command_text or "").strip()
+    if not command_text:
+        raise ValueError("Claude Code 命令不能为空")
+    model = validate_claude_model(model)
+    existing = saved_claude_configuration()
+    if existing and existing["command"] == command_text and existing["model"] == model:
+        return claude_configuration_status()
+    now = utc_now()
+    with connect_accounts_db() as db:
+        db.execute(
+            """INSERT INTO machine_claude_config
+               (id, command, model, verified, version, auth_method, test_reply, error, tested_at, updated_at)
+               VALUES (1, ?, ?, 0, '', '', '', '', NULL, ?)
+               ON CONFLICT(id) DO UPDATE SET command=excluded.command, model=excluded.model,
+               verified=0, version='', auth_method='', test_reply='', error='', tested_at=NULL,
+               updated_at=excluded.updated_at""",
+            (command_text, model, now),
+        )
+    return claude_configuration_status()
+
+
+def test_claude_configuration() -> dict[str, object]:
+    row = saved_claude_configuration()
+    if not row:
+        raise ValueError("请先保存 Claude Code 命令")
+    command_text = str(row["command"] or "").strip()
+    model = str(row["model"] or "").strip()
+    environment = os.environ.copy()
+    environment.update({"LC_ALL": "C", "LANG": "C", "CLAUDE_CODE_SKIP_PROMPT_HISTORY": "1"})
+    version = ""
+    auth_method = ""
+    test_reply = ""
+    error_message = ""
+    try:
+        command_text, base_command = resolve_claude_command(command_text)
+        model = validate_claude_model(model)
+        version_result = subprocess.run(
+            [base_command[0], "--version"], capture_output=True, text=True,
+            timeout=15, check=False, env=environment,
+        )
+        version_lines = (version_result.stdout or version_result.stderr).strip().splitlines()
+        version = version_lines[0][:120] if version_lines else ""
+        probe = subprocess.run(
+            [
+                *base_command, "-p", "Reply with exactly CONFIG_OK and no other text.",
+                "--output-format", "json", "--model", model, "--max-turns", "1",
+                "--tools", "", "--no-session-persistence", "--disable-slash-commands",
+            ],
+            input="", text=True, capture_output=True, cwd=ROOT,
+            timeout=120, check=False, env=environment,
+        )
+        probe_text = f"{probe.stdout}\n{probe.stderr}".strip()
+        if probe.returncode != 0:
+            detail = probe_text[-1400:] or "命令没有输出错误详情"
+            raise RuntimeError(f"Claude Code 测试失败（退出码 {probe.returncode}）：{detail}")
+        try:
+            response = json.loads(probe.stdout)
+            reply = str(response.get("result", "")) if isinstance(response, dict) else ""
+        except (json.JSONDecodeError, TypeError):
+            reply = probe.stdout
+        if "CONFIG_OK" not in reply:
+            raise RuntimeError(f"Claude Code 测试未返回 CONFIG_OK：{probe_text[-1400:] or '命令没有输出'}")
+        auth_method = "claude_account"
+        test_reply = "CONFIG_OK"
+    except FileNotFoundError:
+        error_message = (
+            "未找到 Claude Code CLI。请先执行 npm install -g @anthropic-ai/claude-code，"
+            "然后运行 claude，并在交互界面输入 /login 完成登录。"
+        )
+    except (ValueError, OSError, subprocess.SubprocessError, RuntimeError) as error:
+        error_message = str(error)[:1500] or "Claude Code 测试失败"
+
+    now = utc_now()
+    verified = int(not error_message and test_reply == "CONFIG_OK")
+    with connect_accounts_db() as db:
+        db.execute(
+            """UPDATE machine_claude_config SET command=?, model=?, verified=?, version=?, auth_method=?,
+               test_reply=?, error=?, tested_at=?, updated_at=? WHERE id = 1""",
+            (command_text, model, verified, version, auth_method, test_reply, error_message, now, now),
+        )
+    return claude_configuration_status()
+
+
+def active_ai_provider() -> str:
+    with connect_accounts_db() as db:
+        row = db.execute("SELECT active_provider FROM machine_ai_settings WHERE id = 1").fetchone()
+    return str(row["active_provider"] if row else "codex")
+
+
+def set_active_ai_provider(provider: str) -> dict[str, object]:
+    provider = str(provider or "").strip().lower()
+    if provider not in {"codex", "claude"}:
+        raise ValueError("AI 后端必须是 codex 或 claude")
+    status = codex_configuration_status() if provider == "codex" else claude_configuration_status()
+    if not status["configured"]:
+        raise ValueError(f"请先保存并测试 {('Codex' if provider == 'codex' else 'Claude Code')} 配置")
+    with connect_accounts_db() as db:
+        db.execute(
+            """INSERT INTO machine_ai_settings (id, active_provider, updated_at) VALUES (1, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET active_provider=excluded.active_provider,
+               updated_at=excluded.updated_at""",
+            (provider, utc_now()),
+        )
+    return ai_configuration_status()
+
+
+def ai_configuration_status() -> dict[str, object]:
+    provider = active_ai_provider()
+    current = codex_configuration_status() if provider == "codex" else claude_configuration_status()
+    return {
+        "activeProvider": provider,
+        "configured": bool(current["configured"]),
+        "codex": codex_configuration_status(),
+        "claude": claude_configuration_status(),
+    }
+
+
+def ai_exec_command(*arguments: str) -> list[str]:
+    """Build a compatible structured-output command for the selected CLI."""
+
+    provider = active_ai_provider()
+    if provider == "codex":
+        return codex_exec_command(*arguments)
+    row = saved_claude_configuration()
+    if not row or not row["verified"]:
+        raise RuntimeError("本机 Claude Code 尚未完成配置测试，请先到主页配置")
+    _command_text, base_command = resolve_claude_command(row["command"])
+    model = validate_claude_model(row["model"])
+    return [
+        sys.executable, str(CLAUDE_ADAPTER_PATH),
+        "--claude-command-json", json.dumps(base_command, ensure_ascii=False),
+        "--claude-model", model, *arguments,
+    ]
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -812,6 +990,24 @@ def connect_accounts_db() -> sqlite3.Connection:
              version TEXT NOT NULL DEFAULT '', auth_method TEXT NOT NULL DEFAULT '',
              test_reply TEXT NOT NULL DEFAULT '', error TEXT NOT NULL DEFAULT '',
              tested_at TEXT, updated_at TEXT NOT NULL
+           )"""
+    )
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS machine_claude_config (
+             id INTEGER PRIMARY KEY CHECK (id = 1), command TEXT NOT NULL,
+             model TEXT NOT NULL DEFAULT '',
+             verified INTEGER NOT NULL DEFAULT 0 CHECK (verified IN (0, 1)),
+             version TEXT NOT NULL DEFAULT '', auth_method TEXT NOT NULL DEFAULT '',
+             test_reply TEXT NOT NULL DEFAULT '', error TEXT NOT NULL DEFAULT '',
+             tested_at TEXT, updated_at TEXT NOT NULL
+           )"""
+    )
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS machine_ai_settings (
+             id INTEGER PRIMARY KEY CHECK (id = 1),
+             active_provider TEXT NOT NULL DEFAULT 'codex'
+               CHECK (active_provider IN ('codex', 'claude')),
+             updated_at TEXT NOT NULL
            )"""
     )
     return connection
@@ -4325,7 +4521,7 @@ def translate_segment_rows(
                             key = f"u{row['unit_index']}"
                             translated = translations.get(key, "").strip()
                             if not translated:
-                                raise RuntimeError(f"Codex returned no translation for {key}")
+                                raise RuntimeError(f"AI backend returned no translation for {key}")
                             db.execute("UPDATE segments SET zh_text = ? WHERE id = ?", (translated, row["id"]))
                             db.execute(
                                 """INSERT INTO translation_memory
@@ -4393,7 +4589,7 @@ def run_codex_translation(
     )
     with tempfile.TemporaryDirectory(prefix="paper-translation-") as temp_dir:
         output_path = Path(temp_dir) / "result.json"
-        command = codex_exec_command(
+        command = ai_exec_command(
             "--ephemeral",
             "--ignore-rules",
             "--sandbox",
@@ -4424,7 +4620,7 @@ def run_codex_translation(
                 username, paper_id, attempt_command, payload
             )
             if result.returncode != 0:
-                message = result.stderr.strip() or result.stdout.strip() or f"codex exec exited {result.returncode}"
+                message = result.stderr.strip() or result.stdout.strip() or f"AI backend exited {result.returncode}"
                 validation_error = message[-2000:]
                 if attempt == 0:
                     continue
@@ -4433,9 +4629,9 @@ def run_codex_translation(
                 data = json.loads(output_path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as error:
                 if attempt == 0:
-                    validation_error = f"Could not parse Codex translation output: {error}"
+                    validation_error = f"Could not parse AI translation output: {error}"
                     continue
-                raise RuntimeError(f"Could not parse Codex translation output: {error}") from error
+                raise RuntimeError(f"Could not parse AI translation output: {error}") from error
             translations: dict[str, str] = {}
             try:
                 for item in data.get("translations", []):
@@ -4461,7 +4657,7 @@ def run_codex_translation(
                     continue
                 raise RuntimeError(validation_error) from error
             return translations
-    raise RuntimeError(validation_error or "Codex translation validation failed")
+    raise RuntimeError(validation_error or "AI translation validation failed")
 
 
 def _missing_translation_literals(source: str, translated: str) -> list[str]:
@@ -4541,7 +4737,7 @@ def _transcribe_equation_crop(
             }],
         }
         output_path = temp_root / "result.json"
-        command = codex_exec_command(
+        command = ai_exec_command(
             "--ephemeral", "--ignore-rules", "--sandbox", "read-only",
             "--skip-git-repo-check", "--json", "--image", str(image_path),
             "--output-schema", str(EQUATION_SCHEMA_PATH),
@@ -4560,7 +4756,7 @@ def _transcribe_equation_crop(
                 username, paper_id, attempt_command, payload
             )
             if result.returncode != 0:
-                message = result.stderr.strip() or result.stdout.strip() or f"codex exec exited {result.returncode}"
+                message = result.stderr.strip() or result.stdout.strip() or f"AI backend exited {result.returncode}"
                 raise RuntimeError(f"Equation transcription failed: {message[-1800:]}")
             try:
                 data = json.loads(output_path.read_text(encoding="utf-8"))
@@ -4743,7 +4939,7 @@ def enrich_paper_structure(username: str, paper_id: str) -> None:
     )
     with tempfile.TemporaryDirectory(prefix="paper-structure-") as temp_dir:
         output_path = Path(temp_dir) / "result.json"
-        command = codex_exec_command(
+        command = ai_exec_command(
             "--ephemeral", "--ignore-rules", "--sandbox", "read-only",
             "--skip-git-repo-check", "--json", "--output-schema", str(STRUCTURE_SCHEMA_PATH),
             "--output-last-message", str(output_path), "--color", "never", prompt,
@@ -4759,7 +4955,7 @@ def enrich_paper_structure(username: str, paper_id: str) -> None:
                 username, paper_id, attempt_command, payload
             )
             if result.returncode != 0:
-                message = result.stderr.strip() or result.stdout.strip() or f"codex exec exited {result.returncode}"
+                message = result.stderr.strip() or result.stdout.strip() or f"AI backend exited {result.returncode}"
                 raise RuntimeError(message[-2000:])
             try:
                 data = json.loads(output_path.read_text(encoding="utf-8"))
@@ -4791,10 +4987,10 @@ def enrich_paper_structure(username: str, paper_id: str) -> None:
                 validation_error = str(error)
                 if attempt == 0:
                     continue
-                raise RuntimeError(f"Codex structure validation failed: {validation_error}") from error
+                raise RuntimeError(f"AI structure validation failed: {validation_error}") from error
             break
         else:
-            raise RuntimeError(validation_error or "Codex structure validation failed")
+            raise RuntimeError(validation_error or "AI structure validation failed")
 
     with connect_db(username) as db:
         if not db.execute("SELECT 1 FROM papers WHERE id = ?", (paper_id,)).fetchone():
@@ -4873,7 +5069,7 @@ def summarize_paper(username: str, paper_id: str) -> None:
     )
     with tempfile.TemporaryDirectory(prefix="paper-summary-") as temp_dir:
         output_path = Path(temp_dir) / "result.json"
-        command = codex_exec_command(
+        command = ai_exec_command(
             "--ephemeral", "--ignore-rules",
             "--sandbox", "read-only", "--skip-git-repo-check",
             "--output-schema", str(SUMMARY_SCHEMA_PATH),
@@ -4889,12 +5085,12 @@ def summarize_paper(username: str, paper_id: str) -> None:
             check=False,
         )
         if result.returncode != 0:
-            message = result.stderr.strip() or result.stdout.strip() or f"codex exec exited {result.returncode}"
+            message = result.stderr.strip() or result.stdout.strip() or f"AI backend exited {result.returncode}"
             raise RuntimeError(message[-2000:])
         try:
             summary = json.loads(output_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
-            raise RuntimeError(f"Could not parse Codex summary output: {error}") from error
+            raise RuntimeError(f"Could not parse AI summary output: {error}") from error
     with connect_db(username) as db:
         if not db.execute("SELECT 1 FROM papers WHERE id = ?", (paper_id,)).fetchone():
             return
@@ -4907,7 +5103,7 @@ def summarize_paper(username: str, paper_id: str) -> None:
 def run_codex_json(username: str, payload: object, schema_path: Path, prompt: str, prefix: str) -> dict[str, object]:
     with tempfile.TemporaryDirectory(prefix=prefix) as temp_dir:
         output_path = Path(temp_dir) / "result.json"
-        command = codex_exec_command(
+        command = ai_exec_command(
             "--ephemeral", "--ignore-rules",
             "--sandbox", "read-only", "--skip-git-repo-check",
             "--output-schema", str(schema_path), "--output-last-message", str(output_path),
@@ -4918,12 +5114,12 @@ def run_codex_json(username: str, payload: object, schema_path: Path, prompt: st
             capture_output=True, cwd=ROOT, timeout=CODEX_TIMEOUT_SECONDS, check=False,
         )
         if result.returncode != 0:
-            message = result.stderr.strip() or result.stdout.strip() or f"codex exec exited {result.returncode}"
+            message = result.stderr.strip() or result.stdout.strip() or f"AI backend exited {result.returncode}"
             raise RuntimeError(message[-2000:])
         try:
             return json.loads(output_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
-            raise RuntimeError(f"Could not parse Codex output: {error}") from error
+            raise RuntimeError(f"Could not parse AI output: {error}") from error
 
 
 def answer_annotation(username: str, annotation_id: str) -> None:
@@ -5363,6 +5559,10 @@ class ResearchHomeHandler(SimpleHTTPRequestHandler):
             request_username.set(username)
             if path == "/api/codex/status":
                 return self.send_json(codex_configuration_status())
+            if path == "/api/claude/status":
+                return self.send_json(claude_configuration_status())
+            if path == "/api/ai/status":
+                return self.send_json(ai_configuration_status())
         if path == "/data" or path.startswith("/data/"):
             return self.send_json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
         if path == "/api/folders":
@@ -5706,6 +5906,29 @@ class ResearchHomeHandler(SimpleHTTPRequestHandler):
                 result,
                 HTTPStatus.OK if result["configured"] else HTTPStatus.UNPROCESSABLE_ENTITY,
             )
+        if path == "/api/claude/config":
+            payload = self.read_json()
+            try:
+                return self.send_json(save_claude_configuration(
+                    str(payload.get("command", "")), str(payload.get("model", "")),
+                ))
+            except ValueError as error:
+                return self.send_json({"error": str(error)}, HTTPStatus.UNPROCESSABLE_ENTITY)
+        if path == "/api/claude/test":
+            try:
+                result = test_claude_configuration()
+            except ValueError as error:
+                return self.send_json({"error": str(error)}, HTTPStatus.UNPROCESSABLE_ENTITY)
+            return self.send_json(
+                result,
+                HTTPStatus.OK if result["configured"] else HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+        if path == "/api/ai/provider":
+            payload = self.read_json()
+            try:
+                return self.send_json(set_active_ai_provider(str(payload.get("provider", ""))))
+            except ValueError as error:
+                return self.send_json({"error": str(error)}, HTTPStatus.UNPROCESSABLE_ENTITY)
         if path == "/api/folders":
             payload = self.read_json()
             name = str(payload.get("name", "")).strip()[:80]
@@ -6116,9 +6339,10 @@ class ResearchHomeHandler(SimpleHTTPRequestHandler):
 
     def handle_upload(self) -> None:
         username = self.current_user()
-        if not username or not codex_configuration_status()["configured"]:
+        ai_status = ai_configuration_status()
+        if not username or not ai_status["configured"]:
             return self.send_json(
-                {"error": "本机 Codex 尚未配置，请先在主页保存并测试本机 Codex 命令"},
+                {"error": "当前 AI 后端尚未配置，请先在主页保存并测试 Codex 或 Claude Code"},
                 HTTPStatus.CONFLICT,
             )
         content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()

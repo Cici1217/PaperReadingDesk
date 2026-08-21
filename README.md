@@ -13,7 +13,7 @@ PaperReadingDesk 是独立运行的本地论文研读工作台，核心功能是
 
 ## 环境依赖
 
-- 必需：Python 3.11+、Node.js、npm、Poppler 和 Codex CLI
+- 必需：Python 3.11+、Node.js、npm、Poppler，以及 Codex CLI 或 Claude Code CLI（二选一）
 - 推荐：MuPDF（提供 `mutool`，用于更完整的版面解析）
 - 可选：Tesseract OCR（仅在扫描版 PDF 没有可用文字层时调用）
 
@@ -84,9 +84,11 @@ python -m venv .venv
 npm install
 ```
 
-## Codex 配置
+## AI CLI 配置
 
-PaperReadingDesk **目前只支持 Codex CLI** 作为 AI 后端。若要使用其他模型、CLI 或 API，需要自行修改 `server.py` 中的模型调用、认证、结构化输出和 token 统计适配逻辑。
+PaperReadingDesk 支持将 **Codex CLI** 或 **Claude Code CLI** 设为 AI 后端。两种配置可以同时保留，但同一时间只使用主页中标记为“当前使用”的一个。项目只保存 CLI 命令、模型、测试状态等非敏感设置，不保存账号、密码、API Key 或登录令牌。
+
+### Codex
 
 在运行服务的同一系统用户下安装并登录 Codex：
 
@@ -98,7 +100,20 @@ codex login status
 
 Codex CLI 的最新安装和平台说明以 [OpenAI Codex 文档](https://developers.openai.com/codex/) 为准。
 
-启动 PaperReadingDesk 后打开首页，点击“配置本机 Codex”，填写 Codex 命令、模型和 reasoning effort，依次执行“保存配置”和“测试配置”。测试成功后才能上传论文并执行 AI 功能。配置只保存在本项目的 `data/settings.sqlite3`。
+### Claude Code
+
+安装 Claude Code，然后启动交互界面：
+
+```bash
+npm install --global @anthropic-ai/claude-code
+claude
+```
+
+首次运行通常会打开浏览器要求登录。若没有出现登录流程，在 Claude Code 中输入 `/login`；登录后输入 `/status` 检查账号和当前模型。在 SSH、WSL 或容器中浏览器未自动打开时，按 `c` 复制登录网址并在浏览器中打开。登录信息由 Claude Code 自己管理，PaperReadingDesk 不会读取或保存凭据。
+
+Anthropic 官方说明：[安装与快速开始](https://code.claude.com/docs/en/quickstart)、[认证与登录](https://code.claude.com/docs/en/authentication)、[CLI 参数](https://code.claude.com/docs/en/cli-usage)。
+
+启动 PaperReadingDesk 后打开首页，点击“配置 Codex / Claude Code”，切换到需要的 CLI，依次执行“保存配置”“测试配置”和“设为当前 AI”。Claude Code 默认模型可填写 `sonnet`，也支持 `opus` 或完整模型名。即使本机尚未安装 Claude，也能先保存配置；测试时会明确提示安装或登录失败。只有当前 AI 测试成功后才能导入论文并执行 AI 功能。配置只保存在本项目的 `data/settings.sqlite3`。
 
 ## 启动
 
@@ -121,11 +136,11 @@ Set-Location "<项目目录>"
 
 ## 使用示例
 
-### 1. 配置本机 Codex
+### 1. 配置本机 AI
 
-打开首页，保存并测试 Codex 命令、模型和 reasoning effort。只有测试成功后，翻译、问答和 AI 论文笔记功能才会启用。
+打开首页，选择 Codex 或 Claude Code，保存并测试命令和模型，再设为当前 AI。Codex 还需要填写 reasoning effort。只有当前 AI 测试成功后，翻译、问答和 AI 论文笔记功能才会启用。
 
-<!-- 截图待补：主页 Codex 配置 -->
+<!-- 截图待补：主页 AI CLI 配置 -->
 
 ### 2. 导入论文
 
@@ -151,7 +166,7 @@ Set-Location "<项目目录>"
 
 OCR 只在整份文件缺少有效文字层时回退启用，因此不会拖慢正常论文。系统未安装 Tesseract 时会返回明确提示，不会静默改走更慢的 AI OCR。翻译继续按批并行执行，并使用本地精确匹配翻译记忆减少重复调用。
 
-每篇论文会累计记录翻译任务的实际运行时间和 Codex JSONL 返回的 token 用量。阅读页与论文列表显示运行时间和总 token；悬停可查看输入、缓存输入、输出与推理输出明细。重试会继续累计，暂停等待时间不计入运行时间；缓存输入属于输入、推理输出属于输出，因此总 token 只按输入加输出计算。
+每篇论文会累计记录翻译任务的实际运行时间和当前 AI CLI 返回的 token 用量。阅读页与论文列表显示运行时间和总 token；悬停可查看输入、缓存输入、输出与推理输出明细。重试会继续累计，暂停等待时间不计入运行时间；缓存输入属于输入、推理输出属于输出，因此总 token 只按输入加输出计算。
 
 图片裁剪不增加默认分析步骤。阅读页中每张论文图片下方提供四向或整体扩展按钮，只有用户手动修正时才重新渲染对应页面。
 
@@ -160,7 +175,7 @@ OCR 只在整份文件缺少有效文字层时回退启用，因此不会拖慢�
 所有新数据仅写入本目录的 `data/`：
 
 - `data/papers.sqlite3`：PDF、解析结果、图表、公式、译文、问答与论文笔记
-- `data/settings.sqlite3`：本项目的 Codex CLI 配置
+- `data/settings.sqlite3`：本项目的 Codex、Claude Code 和当前 AI 选择
 
 项目不会读取拆分前的旧数据目录或其他项目的数据，也不执行旧数据迁移。若设置 `SELF_PAGE_DATA_DIR`，请为本项目指定独立目录。
 

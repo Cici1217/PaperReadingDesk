@@ -6,7 +6,7 @@ const PAPER_LAYOUT_MODE_KEY = "selfPage.paperLayoutMode.v1";
 const paperTranslations = {
   zh: {
     skip: "跳到正文", navHome: "首页", navCommands: "常用命令", navProjects: "项目", navStudy: "学习", navPapers: "论文", navNotes: "笔记",
-    label: "论文阅读器", title: "论文阅读", lead: "拖入英文 PDF，由本机 Codex 翻译，在同一页进行中英对照阅读。",
+    label: "论文阅读器", title: "论文阅读", lead: "拖入英文 PDF，由当前本机 AI 翻译，在同一页进行中英对照阅读。",
     dropTitle: "拖拽 PDF 到这里", dropHint: "或点击选择文件 · 单个文件不超过 60 MB", libraryLabel: "论文库", libraryTitle: "论文库",
     emptyTitle: "选择一篇论文开始阅读", emptyDesc: "上传后会自动提取文本并排队翻译。扫描版 PDF 暂时需要先做 OCR。", original: "原 PDF ↗", retry: "重试翻译",
     chinese: "中文", english: "English", footer: "PDF 与译文只保存在这台电脑。",
@@ -18,7 +18,7 @@ const paperTranslations = {
   },
   ja: {
     skip: "本文へ移動", navHome: "ホーム", navCommands: "コマンド", navProjects: "プロジェクト", navStudy: "学習", navPapers: "論文", navNotes: "ノート",
-    label: "論文リーダー", title: "論文を読む", lead: "英語PDFを追加すると、ローカルのCodexが翻訳し、同じ画面で英中対訳を読めます。",
+    label: "論文リーダー", title: "論文を読む", lead: "英語PDFを追加すると、現在のローカルAIが翻訳し、同じ画面で英中対訳を読めます。",
     dropTitle: "PDFをここにドロップ", dropHint: "クリックして選択 · 1ファイル60 MBまで", libraryLabel: "ライブラリ", libraryTitle: "論文ライブラリ",
     emptyTitle: "論文を選択してください", emptyDesc: "アップロード後、自動でテキストを抽出して翻訳します。スキャンPDFは先にOCRが必要です。", original: "元のPDF ↗", retry: "翻訳を再試行",
     chinese: "中文", english: "English", footer: "PDFと翻訳はこのPC内だけに保存されます。",
@@ -30,7 +30,7 @@ const paperTranslations = {
   },
   en: {
     skip: "Skip to content", navHome: "Home", navCommands: "Commands", navProjects: "Projects", navStudy: "Study", navPapers: "Papers", navNotes: "Notes",
-    label: "PAPER READER", title: "Paper reading", lead: "Drop in an English PDF, translate it with the local Codex backend, and read the English and Chinese together.",
+    label: "PAPER READER", title: "Paper reading", lead: "Drop in an English PDF, translate it with the active local AI backend, and read the source and translation together.",
     dropTitle: "Drop PDFs here", dropHint: "or click to choose · 60 MB maximum per file", libraryLabel: "LIBRARY", libraryTitle: "Paper library",
     emptyTitle: "Select a paper to start reading", emptyDesc: "Text is extracted and queued for translation after upload. Scanned PDFs need OCR first.", original: "Original PDF ↗", retry: "Retry translation",
     chinese: "Chinese", english: "English", footer: "PDFs and translations stay on this computer.",
@@ -47,7 +47,7 @@ Object.assign(paperTranslations.ja, { chooseTargetTitle: "論文の翻訳言語�
 Object.assign(paperTranslations.en, { chooseTargetTitle: "Choose the paper translation language", chooseTargetDesc: "This setting belongs to this paper and is independent of the interface language.", cancel: "Cancel", "target.zh": "Chinese", "target.ja": "Japanese", "target.ko": "Korean", modeBilingualTarget: "English ↔ {target}", modeTranslation: "{target} only", translationLabel: "{target} translation", copyTitle: "Copy full title", titleCopied: "Copied", originalEquation: "View original PDF equation", formulaPending: "This formula is waiting for a reliable LaTeX transcription; the original PDF rendering is shown for now.", enrichPaper: "Complete formulas & captions" });
 paperTranslations.ko = {
   skip: "본문으로 이동", navHome: "홈", navCommands: "명령어", navProjects: "프로젝트", navStudy: "학습", navPapers: "논문", navNotes: "노트",
-  label: "논문 리더", title: "논문 읽기", lead: "영문 PDF를 추가하고 로컬 Codex로 번역하여 원문과 번역문을 함께 읽습니다.",
+  label: "논문 리더", title: "논문 읽기", lead: "영문 PDF를 추가하고 현재 로컬 AI로 번역하여 원문과 번역문을 함께 읽습니다.",
   dropTitle: "PDF를 여기에 놓으세요", dropHint: "또는 클릭하여 선택 · 파일당 최대 60MB", libraryLabel: "라이브러리", libraryTitle: "논문 라이브러리",
   emptyTitle: "읽을 논문을 선택하세요", emptyDesc: "업로드 후 텍스트를 추출하고 번역 대기열에 추가합니다. 스캔 PDF는 먼저 OCR이 필요합니다.", original: "원본 PDF ↗", retry: "번역 다시 시도",
   chinese: "중국어", english: "English", footer: "PDF와 번역문은 이 컴퓨터에만 저장됩니다.",
