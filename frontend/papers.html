@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="本地双语论文阅读器" />
+  <meta name="theme-color" content="#f4f1e9" />
+  <title>PaperReadingDesk · Papers</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./papers.css" />
+  <script src="./frontend-config.js"></script>
+</head>
+<body data-page="papers">
+  <a class="skip-link" href="#mainContent" data-paper-i18n="skip">跳到正文</a>
+  <header class="topbar"><a class="brand" href="./index.html"><span class="brand-mark">PRD</span><span><strong>PaperReadingDesk</strong><small>local paper workspace</small></span></a><nav aria-label="页面导航"><a href="./index.html" data-paper-i18n="navHome">首页</a><a class="current" aria-current="page" href="./papers.html" data-paper-i18n="navPapers">论文</a></nav><div class="header-actions"><div class="language-switch" role="group" aria-label="Language"><button type="button" data-lang="zh">中</button><button type="button" data-lang="ja">日</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="ko">한</button></div></div></header>
+
+  <main id="mainContent" tabindex="-1" class="paper-main">
+    <div id="paperLibraryView" class="paper-library-view">
+    <section class="paper-intro">
+      <div><p class="eyebrow" data-paper-i18n="label">PAPER READER</p><h1 data-paper-i18n="title">论文阅读</h1><p data-paper-i18n="lead">拖入英文 PDF，由本机 Codex 翻译，在同一页进行中英对照阅读。</p></div>
+      <label id="paperDropZone" class="paper-drop-zone"><input id="paperFileInput" type="file" accept="application/pdf,.pdf" multiple /><span class="drop-icon">↓</span><strong data-paper-i18n="dropTitle">拖拽 PDF 到这里</strong><small data-paper-i18n="dropHint">或点击选择文件 · 单个文件不超过 60 MB</small></label>
+    </section>
+
+    <section id="paperLibraryBar" class="paper-library-bar panel">
+      <button id="paperLibraryToggle" class="paper-library-toggle" type="button" aria-expanded="true" aria-controls="paperLibraryContent"><span aria-hidden="true">⌃</span></button>
+      <div id="paperLibraryContent" class="paper-library-content">
+        <div class="paper-library-head"><div><p class="card-label" data-paper-i18n="libraryLabel">LIBRARY</p><h2 data-paper-i18n="libraryTitle">论文库</h2></div><div class="library-head-actions"><strong id="paperCount">0</strong></div></div>
+        <div class="library-shelf">
+          <div class="library-folders">
+            <div class="folder-toolbar"><button id="allPapersFolder" class="folder-filter active" type="button"><span data-paper-i18n="allPapers">全部论文</span><small id="allPaperCount">0</small></button><button id="addFolderButton" class="add-folder-button" type="button" data-paper-i18n="addFolder">＋ 文件夹</button></div>
+            <div id="folderList" class="folder-list"></div>
+          </div>
+          <div class="library-papers">
+            <div class="library-papers-head"><div><p class="card-label">VIEW</p><h3 id="activeFolderTitle">全部论文</h3></div><span id="activeFolderMeta"></span></div>
+            <div id="uploadNotice" class="upload-notice" hidden></div>
+            <div id="paperList" class="paper-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <section id="paperReaderView" class="paper-reader-view">
+      <div class="reader-page-head">
+        <a class="reader-back-link" href="./papers.html">← <span data-paper-i18n="backToLibrary">返回论文库</span></a>
+        <div><p class="eyebrow" data-paper-i18n="readerRoomTitle">全文阅读</p><p data-paper-i18n="readerRoomLead">在一个安静的阅读空间里，连续读完这篇论文。</p></div>
+      </div>
+    <section id="paperWorkspace" class="paper-workspace">
+      <aside id="outlineSidebar" class="paper-outline-sidebar">
+        <button id="outlineSidebarToggle" class="outline-sidebar-toggle" type="button" aria-expanded="true" aria-controls="outlineSidebarContent"><span aria-hidden="true">‹</span></button>
+        <div id="outlineSidebarContent" class="outline-sidebar-content">
+          <div class="outline-head"><div><p class="card-label">PIPELINE</p><h2 data-paper-i18n="outline">目录</h2></div></div>
+          <nav id="paperOutline" class="outline-list"></nav>
+        </div>
+      </aside>
+
+      <section class="paper-reader panel">
+        <div id="readerEmpty" class="reader-empty"><span>PDF</span><h2 data-paper-i18n="emptyTitle">选择一篇论文开始阅读</h2><p data-paper-i18n="emptyDesc">上传后会自动提取文本并排队翻译。扫描版 PDF 暂时需要先做 OCR。</p></div>
+        <div id="readerContent" hidden>
+          <header class="reader-head"><div><p id="readerStatus" class="card-label"></p><h2 id="readerTitle"></h2><p id="readerMeta"></p><p id="readerTranslationStats" class="reader-translation-stats" hidden></p></div><div class="reader-actions"><select id="paperFolderSelect" class="paper-folder-select" aria-label="论文文件夹"></select><a id="openOriginalPdf" class="reader-action" target="_blank" rel="noreferrer" data-paper-i18n="original">原 PDF ↗</a><button id="retryTranslation" class="reader-action" type="button" hidden data-paper-i18n="retry">重试翻译</button></div></header>
+          <div id="translationProgress" class="translation-progress" hidden><div><span id="translationProgressBar"></span></div><p id="translationProgressText"></p></div>
+          <div class="paper-module-tabs" role="tablist"><button class="active" type="button" data-paper-module="reading" data-paper-i18n="moduleReading">中英对照阅读</button><button type="button" data-paper-module="assist" data-paper-i18n="moduleAssist">AI 辅助阅读</button><button type="button" data-paper-module="notes" data-paper-i18n="moduleNotes">论文摘录</button></div>
+          <section id="moduleReading" class="paper-module">
+            <div class="reader-toolbar"><div class="ctrl-tip" data-paper-i18n="ctrlTip">鼠标悬停在论文文字上不显示弹窗</div><div class="reader-view-controls" role="group" aria-label="Reading mode"><button id="modeBilingualButton" type="button" data-reading-mode="dual">中英对照</button><button type="button" data-reading-mode="english" data-paper-i18n="modeEnglish">只看英文</button><button id="modeTranslationButton" type="button" data-reading-mode="chinese">只看译文</button></div><div id="columnLabels" class="column-labels"><span data-paper-i18n="english">English</span><span id="translationColumnLabel">中文</span></div></div>
+            <div id="paperError" class="paper-error" hidden></div>
+            <div id="bilingualReader" class="bilingual-reader dual-mode"></div>
+          </section>
+          <section id="moduleAssist" class="paper-module" hidden>
+            <section id="summaryPanel" class="summary-panel"><div class="summary-panel-head"><div><p class="card-label" data-paper-i18n="summaryLabel">AI READING NOTES</p><h3 data-paper-i18n="summaryTitle">AI 阅读笔记</h3><p class="framework-note" data-paper-i18n="versionHint">每次生成都会保存为一个新版本，不会覆盖旧笔记。</p></div><div class="ai-note-actions"><button id="guideNoteButton" class="reader-action summary-action" type="button" data-paper-i18n="generateGuideNote">按笔记指南生成</button><button id="threePassNoteButton" class="reader-action summary-action" type="button" data-paper-i18n="generateThreePass">按三遍阅读法生成</button></div></div><div id="summaryStatus" class="summary-status" hidden></div><div class="ai-note-workspace"><nav id="aiNoteVersionList" class="ai-note-version-list" aria-label="AI note versions"></nav><div id="summaryContent" class="summary-content"></div></div></section>
+            <section class="annotation-panel"><div class="annotation-head"><div><p class="card-label">HIGHLIGHTS & QUESTIONS</p><h3 data-paper-i18n="questionsTitle">高亮与提问</h3></div></div><div id="annotationList" class="annotation-list"></div></section>
+          </section>
+          <section id="moduleNotes" class="paper-module" hidden>
+            <section class="notes-panel"><div class="notes-head"><div><p class="card-label">PAPER CLIPPINGS</p><h3 data-paper-i18n="notesTitle">论文摘录</h3></div></div><p class="notes-hint" data-paper-i18n="notesHint">这里用于保存当前论文的摘录。</p><form id="manualSnippetForm" class="manual-snippet-form"><textarea id="manualSnippetInput" rows="4" data-paper-i18n-placeholder="manualSnippetPlaceholder" placeholder="输入与这篇论文有关的摘录…"></textarea><button type="submit" data-paper-i18n="manualSnippetAdd">添加摘录</button></form><div id="snippetList" class="snippet-list"></div></section>
+          </section>
+        </div>
+      </section>
+    </section>
+    </section>
+  </main>
+  <footer><span data-paper-i18n="footer">PDF 与译文只保存在这台电脑。</span></footer>
+  <div id="translationTooltip" class="translation-tooltip" role="tooltip" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="selectionTools" class="selection-tools" hidden><button id="askSelection" type="button" data-paper-i18n="askAI">问 AI</button><button id="saveSelection" type="button" data-paper-i18n="addNote">加入论文摘录</button></div>
+  <dialog id="questionDialog" class="question-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="card-label">ASK CODEX</p><blockquote id="questionQuote"></blockquote><label><span data-paper-i18n="yourQuestion">你的问题</span><textarea id="questionInput" rows="3" required></textarea></label><button id="submitQuestion" class="dialog-submit" value="default" type="button" data-paper-i18n="sendQuestion">提问并高亮</button></form></dialog>
+  <dialog id="answerDialog" class="answer-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="card-label">AI ANSWER</p><blockquote id="answerQuote"></blockquote><h3 id="answerQuestion"></h3><div id="answerBody"></div><div class="answer-actions"><button id="askFromAnswer" type="button">基于回答继续提问</button><button id="saveAnswerToNotes" type="button">保存回答到摘录</button></div></form></dialog>
+  <dialog id="translationLanguageDialog" class="translation-language-dialog"><form id="paperImportOptionsForm" method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="card-label">IMPORT OPTIONS</p><h2 data-paper-i18n="chooseTargetTitle">选择翻译语言与版式</h2><p data-paper-i18n="chooseTargetDesc">本次拖入的全部论文共用这些设置，之后仍可分别重试。</p><fieldset><legend data-paper-i18n="translationTarget">翻译语言</legend><div class="translation-language-options"><label><input type="radio" name="targetLanguage" value="zh" /><strong>中文</strong><span>English ↔ 中文</span></label><label><input type="radio" name="targetLanguage" value="ja" /><strong>日本語</strong><span>English ↔ 日本語</span></label><label><input type="radio" name="targetLanguage" value="ko" /><strong>한국어</strong><span>English ↔ 한국어</span></label></div></fieldset><fieldset><legend data-paper-i18n="paperLayout">论文版式</legend><div class="paper-layout-options"><label><input type="radio" name="layoutMode" value="auto" /><strong data-paper-i18n="layoutAuto">自动分析</strong><span data-paper-i18n="layoutAutoHint">逐页快速判断，不调用 AI</span></label><label><input type="radio" name="layoutMode" value="single" /><strong data-paper-i18n="layoutSingle">单栏</strong><span data-paper-i18n="layoutSingleHint">按页面从上到下读取</span></label><label><input type="radio" name="layoutMode" value="double" /><strong data-paper-i18n="layoutDouble">双栏</strong><span data-paper-i18n="layoutDoubleHint">每页先左栏再右栏</span></label></div></fieldset><div class="translation-language-actions"><button class="translation-language-confirm" value="confirm" type="submit" data-paper-i18n="startImport">开始导入</button><button class="translation-language-cancel" value="cancel" type="submit" data-paper-i18n="cancel">取消</button></div></form></dialog>
+  <script src="./mathjax-config.js"></script>
+  <script src="/vendor/mathjax/tex-chtml.js"></script>
+  <script src="./api-client.js"></script>
+  <script src="./papers.js"></script>
+</body>
+</html>

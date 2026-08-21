@@ -1,0 +1,35 @@
+# Local Python/runtime files
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+
+# Original local screenshot sources. The published copies used by the feature
+# tour live under frontend/pics/.
+/pics/
+
+# Local application data: databases, uploaded PDFs, exports, and personal files.
+# Keep the directory in the project, but never commit its runtime contents.
+/data/*
+!/data/.gitkeep
+
+# Generated exports and local logs
+exports/
+*.log
+
+# Local editor and operating-system files
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+.DS_Store
+.vscode/
+
+# Defensive fallback for databases accidentally created outside data/.
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db

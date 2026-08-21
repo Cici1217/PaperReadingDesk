@@ -1,0 +1,7 @@
+{
+  "name": "paper-reading-desk",
+  "private": true,
+  "dependencies": {
+    "mathjax": "4.1.3"
+  }
+}

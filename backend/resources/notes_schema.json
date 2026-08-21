@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "markdown": {
+      "type": "string",
+      "description": "A complete Simplified-Chinese research note in Markdown, beginning with a level-one paper title."
+    }
+  },
+  "required": ["title", "markdown"],
+  "additionalProperties": false
+}

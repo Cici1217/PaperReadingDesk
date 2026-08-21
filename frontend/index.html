@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="本地论文翻译与双语阅读工作台" />
+  <meta name="theme-color" content="#f4f1e9" />
+  <title>PaperReadingDesk</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="./frontend-config.js"></script>
+</head>
+<body data-page="home">
+  <a class="skip-link" href="#mainContent" data-home-i18n="skip">跳到正文</a>
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-mark">PRD</span><span><strong>PaperReadingDesk</strong><small>local paper workspace</small></span></a>
+    <nav aria-label="页面导航"><a class="current" aria-current="page" href="./index.html" data-home-i18n="navHome">首页</a><a href="./papers.html" data-home-i18n="navPapers">论文阅读</a></nav>
+    <div class="header-actions"><div class="language-switch" role="group" aria-label="Language"><button type="button" data-lang="zh">中</button><button type="button" data-lang="ja">日</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="ko">한</button></div></div>
+  </header>
+  <main id="mainContent" tabindex="-1">
+    <section class="hero page-section">
+      <div class="hero-copy">
+        <p class="card-label" data-home-i18n="heroLabel">PAPERREADINGDESK</p>
+        <h1 data-home-i18n="heroTitle">本地论文翻译与阅读</h1>
+        <p data-home-i18n="heroLead">导入 PDF，使用你自己的本机 Codex 完成翻译、摘要、问答和论文笔记。</p>
+        <div class="hero-actions"><a class="primary-button" href="./papers.html" data-home-i18n="enterLibrary">进入论文库</a><a class="secondary-button feature-showcase-entry" href="./features.html"><span data-home-i18n="featureShowcase">功能展示 · 必读</span><span aria-hidden="true">→</span></a></div>
+        <button id="codexConfigButton" class="codex-config-button" type="button" aria-haspopup="dialog" aria-controls="codexConfigDialog">
+          <span class="codex-terminal-mark" aria-hidden="true">&gt;_</span>
+          <span class="codex-config-copy"><small data-home-i18n="codexEyebrow">本机 AI 配置</small><strong data-home-i18n="codexOpen">配置本机 Codex</strong></span>
+          <span id="codexHomeStatus" class="codex-home-status is-checking"><i aria-hidden="true"></i><span data-home-i18n="statusChecking">正在读取…</span></span>
+          <span class="codex-config-arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+      <aside class="now-card"><p class="card-label" data-home-i18n="localLabel">LOCAL FIRST</p><h2 data-home-i18n="localTitle">论文只保存在本机</h2><p data-home-i18n="localDesc">PaperReadingDesk 将论文、译文、笔记和设置保存在项目目录下的 data/ 文件夹中。</p></aside>
+    </section>
+  </main>
+  <dialog id="codexConfigDialog" class="codex-config-dialog" aria-labelledby="codexConfigTitle">
+    <div class="codex-dialog-head"><div><p data-home-i18n="codexEyebrow">本机 AI 配置</p><h2 id="codexConfigTitle" data-home-i18n="dialogTitle">本机 Codex 配置</h2></div><button id="codexConfigClose" type="button" aria-label="关闭" data-home-i18n-aria-label="close">×</button></div>
+    <section class="codex-status-panel" aria-live="polite">
+      <div class="codex-status-heading"><span id="codexDialogIndicator" class="codex-dialog-indicator is-checking"><i aria-hidden="true"></i><strong id="codexDialogStatus" data-home-i18n="statusChecking">正在读取…</strong></span><button id="codexRefreshStatus" type="button" data-home-i18n="refresh">重新读取</button></div>
+      <dl class="codex-status-grid">
+        <div><dt data-home-i18n="authMethod">认证方式</dt><dd id="codexAuthMethod">—</dd></div><div><dt data-home-i18n="version">CLI 版本</dt><dd id="codexVersion">—</dd></div>
+        <div><dt data-home-i18n="savedCommand">已保存命令</dt><dd><code id="codexSavedCommand">—</code></dd></div><div><dt data-home-i18n="model">模型</dt><dd><code id="codexModel">—</code></dd></div>
+        <div><dt data-home-i18n="reasoning">推理强度</dt><dd><code id="codexReasoning">—</code></dd></div><div><dt data-home-i18n="testReply">测试返回</dt><dd><code id="codexTestReply">—</code></dd></div>
+      </dl><p id="codexTestError" class="codex-test-error" hidden></p>
+    </section>
+    <form id="codexConfigForm" class="codex-config-form">
+      <div class="codex-command-intro"><h3 data-home-i18n="formTitle">配置自己的本机 Codex</h3><p data-home-i18n="formLead">先在终端安装 Codex 并登录，再保存并测试下面的配置。</p></div>
+      <details class="codex-query-guide" open><summary data-home-i18n="querySummary">新用户：这些值在哪里看？</summary><ol><li data-home-i18n="query1">执行 codex login status 确认登录。</li><li data-home-i18n="query2">执行 codex，输入 /model 查看模型和推理强度。</li><li data-home-i18n="query3">输入 /status 确认当前选择。</li></ol></details>
+      <label for="codexCommandInput" data-home-i18n="commandLabel">Codex 命令</label><input id="codexCommandInput" name="command" type="text" value="codex" autocomplete="off" required />
+      <label for="codexModelInput" data-home-i18n="model">模型</label><input id="codexModelInput" name="model" type="text" placeholder="先运行 /model 查询" data-home-i18n-placeholder="modelPlaceholder" autocomplete="off" required />
+      <label for="codexReasoningInput">Reasoning effort</label><input id="codexReasoningInput" name="reasoningEffort" type="text" list="codexReasoningSuggestions" placeholder="medium" autocomplete="off" required /><datalist id="codexReasoningSuggestions"><option value="minimal"></option><option value="low"></option><option value="medium"></option><option value="high"></option><option value="xhigh"></option></datalist>
+      <p data-home-i18n="configuredHint">保存后必须测试成功，论文翻译、摘要、问答和笔记功能才会启用。</p>
+      <div class="codex-config-actions"><button id="codexSaveCommand" type="submit" data-home-i18n="save">保存配置</button><button id="codexTestCommand" type="button" data-home-i18n="test">测试配置</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./api-client.js"></script><script src="./config-home.js"></script>
+</body>
+</html>

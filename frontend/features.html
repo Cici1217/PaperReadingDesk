@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PaperReadingDesk 功能展示与使用导览" />
+  <meta name="theme-color" content="#f4f1e9" />
+  <title>功能展示 · PaperReadingDesk</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="feature-showcase-page" data-page="features">
+  <a class="skip-link" href="#mainContent" data-feature-i18n="skip">跳到正文</a>
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-mark">PRD</span><span><strong>PaperReadingDesk</strong><small>local paper workspace</small></span></a>
+    <nav aria-label="页面导航"><a href="./index.html" data-feature-i18n="navHome">首页</a><a class="current" aria-current="page" href="./features.html" data-feature-i18n="navFeatures">功能展示</a><a href="./papers.html" data-feature-i18n="navPapers">论文阅读</a></nav>
+    <div class="header-actions"><div class="language-switch" role="group" aria-label="Language"><button type="button" data-lang="zh">中</button><button type="button" data-lang="ja">日</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="ko">한</button></div></div>
+  </header>
+
+  <main id="mainContent" class="feature-showcase-main" tabindex="-1">
+    <section class="showcase-intro" aria-labelledby="showcaseTitle">
+      <div class="showcase-intro-copy">
+        <p class="showcase-must-read" data-feature-i18n="mustRead">第一次使用必看</p>
+        <p class="card-label">PAPERREADINGDESK / FEATURE TOUR</p>
+        <h1 id="showcaseTitle" data-feature-i18n="title">从 PDF 到可复用的论文笔记</h1>
+        <p class="showcase-lead" data-feature-i18n="lead">按真实使用顺序查看 PaperReadingDesk：先配置本机 Codex，再导入论文，完成图片与公式保留、翻译、双语阅读、AI 阅读笔记和摘录。</p>
+        <div class="hero-actions"><a class="primary-button" href="./papers.html" data-feature-i18n="openLibrary">开始阅读论文</a><a class="secondary-button" href="#feature-01" data-feature-i18n="startTour">开始功能导览</a></div>
+      </div>
+      <aside class="showcase-intro-card">
+        <span class="showcase-count">11</span>
+        <div><strong data-feature-i18n="realScreens">张实机截图</strong><p data-feature-i18n="realScreensDesc">以下内容均来自项目当前界面，并按完整工作流排列。</p></div>
+      </aside>
+    </section>
+
+    <nav class="showcase-index" aria-label="功能步骤">
+      <a href="#feature-01"><span>01</span><small data-feature-i18n="index1">配置</small></a>
+      <a href="#feature-02"><span>02</span><small data-feature-i18n="index2">导入</small></a>
+      <a href="#feature-03"><span>03</span><small data-feature-i18n="index3">阅读</small></a>
+      <a href="#feature-04"><span>04</span><small data-feature-i18n="index4">图片</small></a>
+      <a href="#feature-05"><span>05</span><small data-feature-i18n="index5">公式</small></a>
+      <a href="#feature-06"><span>06</span><small data-feature-i18n="index6">AI 辅助</small></a>
+      <a href="#feature-07"><span>07</span><small data-feature-i18n="index7">笔记</small></a>
+      <a href="#feature-08"><span>08</span><small data-feature-i18n="index8">插图</small></a>
+      <a href="#feature-09"><span>09</span><small data-feature-i18n="index9">编排</small></a>
+      <a href="#feature-10"><span>10</span><small data-feature-i18n="index10">三遍阅读</small></a>
+      <a href="#feature-11"><span>11</span><small data-feature-i18n="index11">摘录</small></a>
+    </nav>
+
+    <section class="showcase-heading">
+      <p class="card-label" data-feature-i18n="walkthroughLabel">REAL WORKFLOW</p>
+      <h2 data-feature-i18n="walkthroughTitle">按顺序认识完整功能</h2>
+      <p data-feature-i18n="clickHint">点击任意截图可以查看原始大图。</p>
+    </section>
+
+    <ol class="showcase-steps">
+      <li id="feature-01" class="showcase-step">
+        <a class="showcase-shot showcase-shot-tall" href="./pics/pic1.png" target="_blank" rel="noreferrer"><img src="./pics/pic1.png" alt="本机 Codex 配置界面" data-feature-i18n-alt="alt1" loading="eager" /></a>
+        <article><span class="showcase-number">01</span><p class="card-label" data-feature-i18n="eyebrow1">LOCAL CODEX</p><h3 data-feature-i18n="heading1">连接你自己的本机 Codex</h3><p data-feature-i18n="desc1">在主页保存 Codex 命令、模型和推理强度，并直接检查登录方式、CLI 版本与测试返回。当前 AI 功能仅支持 Codex，配置成功后才会启用。</p></article>
+      </li>
+      <li id="feature-02" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic2.png" target="_blank" rel="noreferrer"><img src="./pics/pic2.png" alt="PDF 导入与论文库界面" data-feature-i18n-alt="alt2" loading="lazy" /></a>
+        <article><span class="showcase-number">02</span><p class="card-label" data-feature-i18n="eyebrow2">IMPORT & LIBRARY</p><h3 data-feature-i18n="heading2">批量导入并整理论文库</h3><p data-feature-i18n="desc2">拖入一个或多个 PDF，统一选择自动分析、单栏或双栏版式。论文可放入自建文件夹，并显示阅读状态、文件大小、翻译耗时和 token 使用量。</p></article>
+      </li>
+      <li id="feature-03" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic3.png" target="_blank" rel="noreferrer"><img src="./pics/pic3.png" alt="论文目录与双语阅读界面" data-feature-i18n-alt="alt3" loading="lazy" /></a>
+        <article><span class="showcase-number">03</span><p class="card-label" data-feature-i18n="eyebrow3">BILINGUAL READING</p><h3 data-feature-i18n="heading3">目录、翻译与双语阅读</h3><p data-feature-i18n="desc3">自动恢复论文标题、摘要和章节目录，提供双语、仅英文、仅译文三种阅读模式。</p></article>
+      </li>
+      <li id="feature-04" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic4.png" target="_blank" rel="noreferrer"><img src="./pics/pic4.png" alt="论文图片与图注展示界面" data-feature-i18n-alt="alt4" loading="lazy" /></a>
+        <article><span class="showcase-number">04</span><p class="card-label" data-feature-i18n="eyebrow4">FIGURES & TABLES</p><h3 data-feature-i18n="heading4">图片、表格与双语图注</h3><p data-feature-i18n="desc4">将论文中的图片和表格放回相应正文位置，同时保留原图注和译文。若复杂版式导致边界不理想，可用方向按钮手动扩展裁剪范围。</p></article>
+      </li>
+      <li id="feature-05" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic5.png" target="_blank" rel="noreferrer"><img src="./pics/pic5.png" alt="论文公式转写与原 PDF 公式对照界面" data-feature-i18n-alt="alt5" loading="lazy" /></a>
+        <article><span class="showcase-number">05</span><p class="card-label" data-feature-i18n="eyebrow5">EQUATIONS</p><h3 data-feature-i18n="heading5">可复制公式与原 PDF 对照</h3><p data-feature-i18n="desc5">可靠转写的公式以清晰的 LaTeX 重新排版，并可一键复制源码；原 PDF 公式始终可以展开核对，避免只看转写结果而丢失依据。</p></article>
+      </li>
+      <li id="feature-06" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic6.png" target="_blank" rel="noreferrer"><img src="./pics/pic6.png" alt="AI 阅读笔记与高亮提问界面" data-feature-i18n-alt="alt6" loading="lazy" /></a>
+        <article><span class="showcase-number">06</span><p class="card-label" data-feature-i18n="eyebrow6">AI ASSISTED READING</p><h3 data-feature-i18n="heading6">AI 阅读笔记、高亮与提问</h3><p data-feature-i18n="desc6">AI 辅助阅读提供“笔记指南”和“三遍阅读法”两种生成方法，每次生成都会保留新版本。阅读正文时也可以选择片段，围绕原文向 Codex 提问。</p></article>
+      </li>
+      <li id="feature-07" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic7.png" target="_blank" rel="noreferrer"><img src="./pics/pic7.png" alt="AI 阅读笔记 Markdown 编辑与预览界面" data-feature-i18n-alt="alt7" loading="lazy" /></a>
+        <article><span class="showcase-number">07</span><p class="card-label" data-feature-i18n="eyebrow7">EDITABLE NOTES</p><h3 data-feature-i18n="heading7">版本化 Markdown 笔记</h3><p data-feature-i18n="desc7">生成结果不是一次性文本：左侧可直接编辑 Markdown，右侧同步查看排版预览。修改可以保存，也可以打印或导出为 PDF。</p></article>
+      </li>
+      <li id="feature-08" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic8.png" target="_blank" rel="noreferrer"><img src="./pics/pic8.png" alt="从论文图片库插入 Markdown 笔记界面" data-feature-i18n-alt="alt8" loading="lazy" /></a>
+        <article><span class="showcase-number">08</span><p class="card-label" data-feature-i18n="eyebrow8">INSERT PAPER VISUALS</p><h3 data-feature-i18n="heading8">点击论文图片插入笔记</h3><p data-feature-i18n="desc8">笔记编辑器列出当前论文提取出的图片与表格。点击缩略图即可把带图注的 Markdown 图片引用插入笔记，无需手工寻找图片地址。</p></article>
+      </li>
+      <li id="feature-09" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic9.png" target="_blank" rel="noreferrer"><img src="./pics/pic9.png" alt="图文混排的论文笔记预览界面" data-feature-i18n-alt="alt9" loading="lazy" /></a>
+        <article><span class="showcase-number">09</span><p class="card-label" data-feature-i18n="eyebrow9">VISUAL NOTE COMPOSITION</p><h3 data-feature-i18n="heading9">图文一起组织研究笔记</h3><p data-feature-i18n="desc9">在 Markdown 源文中组织论点、公式和插图，同时通过预览确认最终阅读效果，让论文中的视觉证据真正进入笔记，而不是与文字分离。</p></article>
+      </li>
+      <li id="feature-10" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic10.png" target="_blank" rel="noreferrer"><img src="./pics/pic10.png" alt="三遍阅读法生成的结构化论文笔记" data-feature-i18n-alt="alt10" loading="lazy" /></a>
+        <article><span class="showcase-number">10</span><p class="card-label" data-feature-i18n="eyebrow10">THREE-PASS METHOD</p><h3 data-feature-i18n="heading10">用三遍阅读法拆解论文</h3><p data-feature-i18n="desc10">三遍阅读法会从一句话结论、论文类型、研究问题与背景开始，继续检查方法、证据、实验可信度和复现线索，适合系统理解与审查论文。</p><a class="showcase-citation" href="https://doi.org/10.1145/1273445.1273458" target="_blank" rel="noreferrer"><span data-feature-i18n="citation10">方法来源：S. Keshav，《How to Read a Paper》，ACM SIGCOMM CCR 37(3)，2007</span><span aria-hidden="true">↗</span></a></article>
+      </li>
+      <li id="feature-11" class="showcase-step">
+        <a class="showcase-shot" href="./pics/pic11.png" target="_blank" rel="noreferrer"><img src="./pics/pic11.png" alt="当前论文的摘录保存界面" data-feature-i18n-alt="alt11" loading="lazy" /></a>
+        <article><span class="showcase-number">11</span><p class="card-label" data-feature-i18n="eyebrow11">PAPER CLIPPINGS</p><h3 data-feature-i18n="heading11">独立保存论文摘录</h3><p data-feature-i18n="desc11">把值得保留的原文、回答或手写内容保存到当前论文。摘录只负责记录与编辑，不会自动生成 AI 阅读笔记，也不会与其他论文混在一起。</p></article>
+      </li>
+    </ol>
+
+    <section class="showcase-final">
+      <p class="card-label" data-feature-i18n="finalLabel">READY TO READ</p>
+      <h2 data-feature-i18n="finalTitle">现在，把一篇论文拖进来</h2>
+      <p data-feature-i18n="finalDesc">所有 PDF、译文、笔记、问答和摘录都保存在本机项目的 data/ 目录中。</p>
+      <a class="primary-button" href="./papers.html" data-feature-i18n="openLibrary">开始阅读论文</a>
+    </section>
+  </main>
+
+  <footer class="showcase-footer"><span>PaperReadingDesk</span><span data-feature-i18n="footer">Local-first paper reading workspace</span></footer>
+  <script src="./features.js"></script>
+</body>
+</html>

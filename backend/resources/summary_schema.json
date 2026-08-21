@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "oneSentence": { "type": "string" },
+    "paperType": { "type": "string" },
+    "researchQuestion": { "type": "string" },
+    "context": { "type": "string" },
+    "assumptions": { "type": "array", "items": { "type": "string" } },
+    "experimentAudit": { "type": "array", "items": { "type": "string" } },
+    "reproductionChecklist": { "type": "array", "items": { "type": "string" } },
+    "overview": { "type": "string" },
+    "contributions": { "type": "array", "items": { "type": "string" } },
+    "method": { "type": "array", "items": { "type": "string" } },
+    "results": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } },
+    "terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "term": { "type": "string" },
+          "explanation": { "type": "string" }
+        },
+        "required": ["term", "explanation"],
+        "additionalProperties": false
+      }
+    },
+    "readingQuestions": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["oneSentence", "paperType", "researchQuestion", "context", "assumptions", "experimentAudit", "reproductionChecklist", "overview", "contributions", "method", "results", "limitations", "terms", "readingQuestions"],
+  "additionalProperties": false
+}
