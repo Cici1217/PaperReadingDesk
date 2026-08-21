@@ -52,6 +52,27 @@ class PdfTextPipelineTests(unittest.TestCase):
         self.assertEqual(result, native)
         ocr.assert_not_called()
 
+    def test_pdf_is_closed_before_external_reader_and_cleaned_up(self) -> None:
+        native = TextExtraction("A searchable paper with enough alphabetic text.", "single", "native")
+        observed_path = None
+
+        def read_closed_file(pdf_path: Path) -> TextExtraction:
+            nonlocal observed_path
+            observed_path = pdf_path
+            # Replacing the file catches the Windows regression: an open
+            # NamedTemporaryFile cannot be replaced by another process.
+            replacement = pdf_path.with_suffix(".replacement")
+            replacement.write_bytes(pdf_path.read_bytes())
+            replacement.replace(pdf_path)
+            return native
+
+        with patch("backend.pdf_text._plain_text", side_effect=read_closed_file):
+            result = extract_pdf_text(b"%PDF-test", "single")
+
+        self.assertEqual(result, native)
+        self.assertIsNotNone(observed_path)
+        self.assertFalse(observed_path.parent.exists())
+
     def test_image_only_text_uses_ocr_fallback(self) -> None:
         native = TextExtraction("12", "single", "native")
         recognized = TextExtraction("Recognized scanned paper text", "single", "ocr")

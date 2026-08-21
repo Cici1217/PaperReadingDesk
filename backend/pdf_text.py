@@ -236,10 +236,13 @@ def _ocr_text(pdf_path: Path) -> TextExtraction:
 
 def extract_pdf_text(pdf_bytes: bytes, layout_mode: str = "auto") -> TextExtraction:
     mode = layout_mode if layout_mode in LAYOUT_MODES else "auto"
-    with tempfile.NamedTemporaryFile(suffix=".pdf") as pdf_file:
-        pdf_file.write(pdf_bytes)
-        pdf_file.flush()
-        pdf_path = Path(pdf_file.name)
+    # NamedTemporaryFile remains open for the lifetime of its context manager.
+    # On Windows that prevents Poppler/Tesseract subprocesses from reopening it.
+    # A temporary directory gives us deterministic cleanup while allowing the
+    # PDF itself to be fully closed before any external process reads it.
+    with tempfile.TemporaryDirectory(prefix="paper-pdf-") as directory:
+        pdf_path = Path(directory) / "source.pdf"
+        pdf_path.write_bytes(pdf_bytes)
         if mode == "single":
             native = _plain_text(pdf_path)
         else:
@@ -248,4 +251,4 @@ def extract_pdf_text(pdf_bytes: bytes, layout_mode: str = "auto") -> TextExtract
                 native = _plain_text(pdf_path)
         if sum(character.isalpha() for character in native.text) >= 20:
             return native
-        return _ocr_text(Path(pdf_file.name))
+        return _ocr_text(pdf_path)
