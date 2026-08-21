@@ -158,12 +158,14 @@ class TranslationPipelineTests(unittest.TestCase):
 
     def test_metrics_lock_does_not_discard_successful_codex_result(self) -> None:
         completed = subprocess.CompletedProcess(["codex"], 0, stdout="{}", stderr="")
-        with mock.patch.object(server.subprocess, "run", return_value=completed), mock.patch.object(
+        with mock.patch.object(server.subprocess, "run", return_value=completed) as run, mock.patch.object(
             server, "record_translation_codex_usage",
             side_effect=sqlite3.OperationalError("database is locked"),
         ):
             result = server.run_translation_codex("local", "paper", ["codex"], {})
         self.assertIs(result, completed)
+        self.assertEqual(run.call_args.kwargs["encoding"], "utf-8")
+        self.assertIn("env", run.call_args.kwargs)
 
     def test_codex_command_failure_is_retried_once_without_real_translation(self) -> None:
         attempts = 0

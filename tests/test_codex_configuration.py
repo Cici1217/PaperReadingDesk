@@ -1,3 +1,4 @@
+import os
 import subprocess
 import tempfile
 import unittest
@@ -8,6 +9,39 @@ import server
 
 
 class CodexConfigurationTests(unittest.TestCase):
+    def test_windows_cli_environment_derives_codex_home_from_user_profile(self) -> None:
+        with patch.dict(os.environ, {"USERPROFILE": r"D:\Users\reader"}, clear=True), patch.object(
+            server.sys, "platform", "win32"
+        ):
+            environment = server.cli_subprocess_environment()
+
+        self.assertEqual(environment["CODEX_HOME"], r"D:\Users\reader\.codex")
+
+    def test_windows_cli_environment_preserves_custom_codex_home(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"USERPROFILE": r"D:\Users\reader", "CODEX_HOME": r"E:\codex-config"},
+            clear=True,
+        ), patch.object(server.sys, "platform", "win32"):
+            environment = server.cli_subprocess_environment()
+
+        self.assertEqual(environment["CODEX_HOME"], r"E:\codex-config")
+
+    def test_windows_cli_environment_finds_existing_home_without_environment_variables(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            profile = Path(directory) / "reader"
+            project = profile / "work" / "paper-desk"
+            (profile / ".codex").mkdir(parents=True)
+            project.mkdir(parents=True)
+            with patch.dict(os.environ, {}, clear=True), patch.object(
+                server.sys, "platform", "win32"
+            ), patch.object(server, "ROOT", project), patch.object(
+                server.Path, "home", side_effect=RuntimeError("no profile")
+            ), patch.object(server.shutil, "which", return_value=None):
+                environment = server.cli_subprocess_environment()
+
+        self.assertEqual(environment["CODEX_HOME"], str(profile / ".codex"))
+
     def test_configuration_can_be_saved_and_verified(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             settings_path = Path(directory) / "settings.sqlite3"

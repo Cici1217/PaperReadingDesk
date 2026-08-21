@@ -629,6 +629,54 @@ def resolve_codex_command(command_text: str) -> tuple[str, list[str]]:
     return resolve_cli_command(command_text, "Codex")
 
 
+def cli_subprocess_environment() -> dict[str, str]:
+    """Build a stable environment for AI CLIs, especially on Windows.
+
+    Codex normally discovers its home directory itself.  Some Windows launch
+    contexts (services, IDE terminals, and restricted child processes) do not
+    expose that directory through the Win32 lookup Codex uses even though
+    USERPROFILE is present.  Passing CODEX_HOME explicitly avoids that
+    ambiguity without changing the user's machine-wide environment.
+    """
+
+    environment = os.environ.copy()
+    environment.update({"LC_ALL": "C", "LANG": "C"})
+    if sys.platform == "win32" and not environment.get("CODEX_HOME", "").strip():
+        home = environment.get("USERPROFILE", "").strip()
+        if not home:
+            home = (
+                environment.get("HOMEDRIVE", "").strip()
+                + environment.get("HOMEPATH", "").strip()
+            )
+        if not home:
+            home = environment.get("HOME", "").strip()
+        if not home:
+            try:
+                home = str(Path.home())
+            except RuntimeError:
+                home = ""
+        if not home:
+            # Sandboxed launchers can remove every conventional home variable
+            # and make the Win32 profile API unavailable.  In that case use a
+            # nearby, existing Codex configuration rather than guessing a
+            # drive or a username.  This covers projects and npm/Scoop installs
+            # located anywhere below the user's profile directory.
+            roots = [ROOT]
+            executable = shutil.which("codex")
+            if executable:
+                roots.append(Path(executable).resolve())
+            for root in roots:
+                for candidate in (root, *root.parents):
+                    if (candidate / ".codex").is_dir():
+                        home = str(candidate)
+                        break
+                if home:
+                    break
+        if home:
+            environment["CODEX_HOME"] = str(Path(home) / ".codex")
+    return environment
+
+
 def resolve_claude_command(command_text: str) -> tuple[str, list[str]]:
     return resolve_cli_command(command_text, "Claude Code")
 
@@ -720,8 +768,7 @@ def test_codex_configuration() -> dict[str, object]:
     command_text = str(row["command"] or "").strip()
     model = str(row["model"] or "").strip()
     reasoning_effort = str(row["reasoning_effort"] or "").strip()
-    environment = os.environ.copy()
-    environment.update({"LC_ALL": "C", "LANG": "C"})
+    environment = cli_subprocess_environment()
     version = ""
     auth_method = ""
     test_reply = ""
@@ -736,13 +783,13 @@ def test_codex_configuration() -> dict[str, object]:
         # execution below is the source of truth.
         version_result = subprocess.run(
             [base_command[0], "--version"], capture_output=True, text=True,
-            timeout=15, check=False, env=environment,
+            encoding="utf-8", errors="replace", timeout=15, check=False, env=environment,
         )
         version_lines = (version_result.stdout or version_result.stderr).strip().splitlines()
         version = version_lines[0][:120] if version_lines else ""
         login_result = subprocess.run(
             [base_command[0], "login", "status"], capture_output=True, text=True,
-            timeout=20, check=False, env=environment,
+            encoding="utf-8", errors="replace", timeout=20, check=False, env=environment,
         )
         login_text = f"{login_result.stdout}\n{login_result.stderr}".strip()
         lowered = login_text.lower()
@@ -760,7 +807,7 @@ def test_codex_configuration() -> dict[str, object]:
                 "Reply with exactly CONFIG_OK and no other text.",
             ],
             input="", text=True, capture_output=True, cwd=ROOT,
-            timeout=120, check=False, env=environment,
+            encoding="utf-8", errors="replace", timeout=120, check=False, env=environment,
         )
         probe_text = f"{probe.stdout}\n{probe.stderr}".strip()
         if probe.returncode != 0:
@@ -4231,7 +4278,8 @@ def run_translation_codex(
     try:
         result = subprocess.run(
             command, input=serialized, text=True, capture_output=True,
-            cwd=ROOT, timeout=CODEX_TIMEOUT_SECONDS, check=False,
+            encoding="utf-8", env=cli_subprocess_environment(), cwd=ROOT,
+            timeout=CODEX_TIMEOUT_SECONDS, check=False,
         )
     except subprocess.TimeoutExpired as error:
         safely_record_translation_codex_usage(username, paper_id, error.stdout)
@@ -5087,6 +5135,8 @@ def summarize_paper(username: str, paper_id: str) -> None:
             input=json.dumps(payload, ensure_ascii=False),
             text=True,
             capture_output=True,
+            encoding="utf-8",
+            env=cli_subprocess_environment(),
             cwd=ROOT,
             timeout=CODEX_TIMEOUT_SECONDS,
             check=False,
@@ -5118,7 +5168,8 @@ def run_codex_json(username: str, payload: object, schema_path: Path, prompt: st
         )
         result = subprocess.run(
             command, input=json.dumps(payload, ensure_ascii=False), text=True,
-            capture_output=True, cwd=ROOT, timeout=CODEX_TIMEOUT_SECONDS, check=False,
+            capture_output=True, encoding="utf-8", env=cli_subprocess_environment(),
+            cwd=ROOT, timeout=CODEX_TIMEOUT_SECONDS, check=False,
         )
         if result.returncode != 0:
             message = result.stderr.strip() or result.stdout.strip() or f"AI backend exited {result.returncode}"
