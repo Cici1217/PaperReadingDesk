@@ -26,6 +26,26 @@ def option_values(arguments: list[str], name: str) -> list[str]:
     return [arguments[index + 1] for index, value in enumerate(arguments[:-1]) if value == name]
 
 
+def schema_for_claude(value: object) -> object:
+    """Remove dialect declarations unsupported by Claude Code's CLI parser.
+
+    Claude validates the inline schema locally and currently treats ``$schema``
+    as a reference it must resolve. The project files remain ordinary Draft
+    2020-12 schemas; only the copy passed to ``claude --json-schema`` is
+    normalized. Keep structural keywords such as ``$ref`` and ``$defs``.
+    """
+
+    if isinstance(value, dict):
+        return {
+            key: schema_for_claude(item)
+            for key, item in value.items()
+            if key != "$schema"
+        }
+    if isinstance(value, list):
+        return [schema_for_claude(item) for item in value]
+    return value
+
+
 def claude_usage_event(response: dict[str, object]) -> str:
     usage = response.get("usage")
     usage = usage if isinstance(usage, dict) else {}
@@ -57,7 +77,7 @@ def main(arguments: list[str]) -> int:
         output_path = Path(option_value(arguments, "--output-last-message"))
         if not isinstance(base_command, list) or not all(isinstance(part, str) for part in base_command):
             raise ValueError("Claude command must be a JSON string array")
-        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        schema = schema_for_claude(json.loads(schema_path.read_text(encoding="utf-8")))
         prompt = arguments[-1]
         if prompt.startswith("--"):
             raise ValueError("missing prompt")

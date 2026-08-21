@@ -57,7 +57,7 @@ claude</pre><ol><li data-home-i18n="claudeQuery1">首次运行会打开浏览器
       <label for="codexCommandInput" id="commandLabel">Codex 命令</label><input id="codexCommandInput" name="command" type="text" value="codex" autocomplete="off" required />
       <label for="codexModelInput" data-home-i18n="model">模型</label><input id="codexModelInput" name="model" type="text" placeholder="先运行 /model 查询" data-home-i18n-placeholder="modelPlaceholder" autocomplete="off" required />
       <div id="reasoningInputRow" class="ai-field-row"><label for="codexReasoningInput">Reasoning effort</label><input id="codexReasoningInput" name="reasoningEffort" type="text" list="codexReasoningSuggestions" placeholder="medium" autocomplete="off" required /><datalist id="codexReasoningSuggestions"><option value="minimal"></option><option value="low"></option><option value="medium"></option><option value="high"></option><option value="xhigh"></option></datalist></div>
-      <p data-home-i18n="configuredHint">保存并测试成功后，可将该 CLI 设为当前论文 AI 后端。</p>
+      <p data-home-i18n="configuredHint">测试成功后会自动将该 CLI 设为当前论文 AI 后端；也可以在已验证的配置之间手动切换。</p>
       <div class="codex-config-actions"><button id="codexSaveCommand" type="submit" data-home-i18n="save">保存配置</button><button id="codexTestCommand" type="button" data-home-i18n="test">测试配置</button><button id="useProviderCommand" type="button" data-home-i18n="useProvider">设为当前 AI</button></div>
     </form>
   </dialog>

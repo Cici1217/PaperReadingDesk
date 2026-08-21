@@ -113,7 +113,7 @@ claude
 
 Anthropic 官方说明：[安装与快速开始](https://code.claude.com/docs/en/quickstart)、[认证与登录](https://code.claude.com/docs/en/authentication)、[CLI 参数](https://code.claude.com/docs/en/cli-usage)。
 
-启动 PaperReadingDesk 后打开首页，点击“配置 Codex / Claude Code”，切换到需要的 CLI，依次执行“保存配置”“测试配置”和“设为当前 AI”。Claude Code 默认模型可填写 `sonnet`，也支持 `opus` 或完整模型名。即使本机尚未安装 Claude，也能先保存配置；测试时会明确提示安装或登录失败。只有当前 AI 测试成功后才能导入论文并执行 AI 功能。配置只保存在本项目的 `data/settings.sqlite3`。
+启动 PaperReadingDesk 后打开首页，点击“配置 Codex / Claude Code”，切换到需要的 CLI，依次执行“保存配置”和“测试配置”。测试成功的 CLI 会自动成为当前 AI，因此 Claude Code 测试成功后，接下来的论文翻译、摘要、问答和笔记都会使用 Claude；也可以在两个已验证配置之间手动切换。Claude Code 默认模型可填写 `sonnet`，也支持 `opus` 或完整模型名。即使本机尚未安装 Claude，也能先保存配置；测试时会明确提示安装或登录失败。只有当前 AI 测试成功后才能导入论文并执行 AI 功能。配置只保存在本项目的 `data/settings.sqlite3`。
 
 ## 启动
 
@@ -138,7 +138,7 @@ Set-Location "<项目目录>"
 
 ### 1. 配置本机 AI
 
-打开首页，选择 Codex 或 Claude Code，保存并测试命令和模型，再设为当前 AI。Codex 还需要填写 reasoning effort。只有当前 AI 测试成功后，翻译、问答和 AI 论文笔记功能才会启用。
+打开首页，选择 Codex 或 Claude Code，保存并测试命令和模型。测试成功后会自动切换为当前 AI；Codex 还需要填写 reasoning effort。只有当前 AI 测试成功后，翻译、问答和 AI 论文笔记功能才会启用。
 
 <!-- 截图待补：主页 AI CLI 配置 -->
 

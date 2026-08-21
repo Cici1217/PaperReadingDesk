@@ -782,6 +782,8 @@ def test_codex_configuration() -> dict[str, object]:
                test_reply=?, error=?, tested_at=?, updated_at=? WHERE id = 1""",
             (command_text, model, reasoning_effort, verified, version, auth_method, test_reply, error_message, now, now),
         )
+    if verified:
+        set_active_ai_provider("codex")
     return codex_configuration_status()
 
 
@@ -904,6 +906,11 @@ def test_claude_configuration() -> dict[str, object]:
                test_reply=?, error=?, tested_at=?, updated_at=? WHERE id = 1""",
             (command_text, model, verified, version, auth_method, test_reply, error_message, now, now),
         )
+    if verified:
+        # A successful real Claude call is the point at which the saved
+        # configuration becomes usable. Make it the selected paper backend so
+        # the very next translation cannot silently continue through Codex.
+        set_active_ai_provider("claude")
     return claude_configuration_status()
 
 

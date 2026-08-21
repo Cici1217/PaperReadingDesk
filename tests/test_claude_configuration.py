@@ -12,6 +12,15 @@ from backend import claude_codex_adapter
 
 
 class ClaudeConfigurationTests(unittest.TestCase):
+    def test_all_project_schemas_are_safe_for_claude_without_editing_sources(self) -> None:
+        schema_paths = sorted((server.RESOURCE_ROOT).glob("*_schema.json"))
+        self.assertEqual(len(schema_paths), 6)
+        for schema_path in schema_paths:
+            source = json.loads(schema_path.read_text(encoding="utf-8"))
+            normalized = claude_codex_adapter.schema_for_claude(source)
+            self.assertIn("$schema", source, schema_path.name)
+            self.assertNotIn("\"$schema\"", json.dumps(normalized), schema_path.name)
+
     def test_configuration_can_be_saved_without_installed_cli(self) -> None:
         with tempfile.TemporaryDirectory() as directory, patch.object(
             server, "SETTINGS_DB_PATH", Path(directory) / "settings.sqlite3"
@@ -51,6 +60,13 @@ class ClaudeConfigurationTests(unittest.TestCase):
             self.assertIn("-p", calls[1])
             self.assertIn("--output-format", calls[1])
             self.assertNotIn("--bare", calls[1])
+            self.assertEqual(server.active_ai_provider(), "claude")
+            translation_command = server.ai_exec_command(
+                "--output-schema", "schema.json", "--output-last-message", "result.json", "translate"
+            )
+            self.assertEqual(translation_command[0], server.sys.executable)
+            self.assertIn(str(server.CLAUDE_ADAPTER_PATH), translation_command)
+            self.assertIn("sonnet", translation_command)
 
     def test_verified_claude_can_be_selected_and_builds_adapter_command(self) -> None:
         with tempfile.TemporaryDirectory() as directory, patch.object(
@@ -81,7 +97,17 @@ class ClaudeConfigurationTests(unittest.TestCase):
             schema_path = root / "schema.json"
             output_path = root / "result.json"
             schema_path.write_text(
-                json.dumps({"type": "object", "properties": {"answer": {"type": "string"}}}),
+                json.dumps({
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "type": "object",
+                    "$defs": {"answer": {"type": "string"}},
+                    "properties": {
+                        "answer": {
+                            "$schema": "https://json-schema.org/draft/2020-12/schema",
+                            "$ref": "#/$defs/answer",
+                        }
+                    },
+                }),
                 encoding="utf-8",
             )
             response = {
@@ -94,6 +120,11 @@ class ClaudeConfigurationTests(unittest.TestCase):
 
             def fake_run(command, **_kwargs):
                 self.assertIn("--json-schema", command)
+                passed_schema = json.loads(command[command.index("--json-schema") + 1])
+                self.assertNotIn("$schema", passed_schema)
+                self.assertNotIn("$schema", passed_schema["properties"]["answer"])
+                self.assertEqual(passed_schema["properties"]["answer"]["$ref"], "#/$defs/answer")
+                self.assertIn("$defs", passed_schema)
                 self.assertIn("--no-session-persistence", command)
                 self.assertNotIn("--bare", command)
                 return subprocess.CompletedProcess(command, 0, json.dumps(response), "")
@@ -115,6 +146,8 @@ class ClaudeConfigurationTests(unittest.TestCase):
             usage = json.loads(stdout.getvalue())
             self.assertEqual(usage["usage"]["input_tokens"], 16)
             self.assertEqual(usage["usage"]["cached_input_tokens"], 6)
+            original_schema = json.loads(schema_path.read_text(encoding="utf-8"))
+            self.assertIn("$schema", original_schema)
 
 
 if __name__ == "__main__":
